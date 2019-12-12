@@ -1,0 +1,12 @@
+到opencv官网下载地址下载opencv4android包。这边下载3.4.4版本的Android pack。  https://opencv.org/releases/
+下载后解压可以看到以下几个文件。
+apk：opencv已经编译好的Android可执行程序，拷贝到手机上即可运行。 samples：生成这些apk的Android代码工程。sdk：里面是opencv的Java的接口和JNI接口等。
+1.打开Android studio新建一个新的Android空工程。
+2.在Android Studio的菜单选择File-->New-->Import Module。
+3.选择opencv android pack解压出来的sdk目录下的java文件夹，点击下一步，出现三个复选框，都选上，点击Finish。
+4.菜单栏选择File-->Project Structure。
+5.选择app-->Dependencies-->+-->3 Module dependency，（或者Dependencies-->app-->+-->3 Module dependency）点击ok退出，然后再点击ok退出。
+6.修改build.gradle(Module:openCVLibrary344)文件，将compileSdkVersion，minSdkVersion，targetSdkVersion改成你对应安卓版本，--
+     这边目标为Android8.0，最低为Android7.0.(版本查看在app-->build.gradle).两种方法，一个是object,方式是app-->build.gradle，
+     openCVLibrary348-->build.gradle    另一个是，android.方式是在gradle scripts里面有build.gradle的集合
+7.在工程目录下的app/src/main目录下新建文件夹jniLibs，将我们下载解压的OpenCV-android-sdk下的sdk/native/libs下的所有文件拷贝到jniLibs下。
