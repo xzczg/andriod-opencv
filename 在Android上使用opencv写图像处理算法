@@ -1,0 +1,249 @@
+布局文件
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.administrator.cv4andoird"
+    android:orientation="vertical"
+    >
+    <Button
+        android:id="@+id/select_btn"
+        android:text="选择图片"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        />
+ 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="fill_parent"
+        android:layout_height="1388px"
+        android:src="@mipmap/ic_launcher" />
+ 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        >
+ 
+        <Button
+            android:id="@+id/src_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:orientation="horizontal"
+            android:text="原图" />
+ 
+        <Button
+            android:id="@+id/process_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:orientation="horizontal"
+            android:text="灰度" />
+ 
+        <Button
+            android:id="@+id/canny_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:orientation="horizontal"
+            android:text="边缘" />
+ 
+        <Button
+            android:id="@+id/hsv_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:orientation="horizontal"
+            android:text="复古" />
+ 
+    </LinearLayout>
+</LinearLayout>
+程序文件
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+ 
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+ 
+ 
+import java.io.InputStream;
+ 
+public class MainActivity extends AppCompatActivity {
+ 
+    private double max_size = 1024;
+    private int PICK_IMAGE_REQUEST = 1;
+    private ImageView myImageView;
+    private Bitmap selectbp;
+    private Bitmap selectbptmp;
+ 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        staticLoadCVLibraries();
+        myImageView = (ImageView)findViewById(R.id.imageView);
+        myImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        Button selectImageBtn = (Button)findViewById(R.id.select_btn);
+        selectImageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // makeText(MainActivity.this.getApplicationContext(), "start to browser image", Toast.LENGTH_SHORT).show();
+                selectImage();
+            }
+        });
+ 
+        Button processBtn = (Button)findViewById(R.id.process_btn);
+        processBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // makeText(MainActivity.this.getApplicationContext(), "hello, image process", Toast.LENGTH_SHORT).show();
+                convertGray();
+            }
+        });
+ 
+        Button cannyBtn = (Button)findViewById(R.id.canny_btn);
+        cannyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // makeText(MainActivity.this.getApplicationContext(), "hello, image process", Toast.LENGTH_SHORT).show();
+                kayCanny();
+            }
+        });
+ 
+        Button srcBtn = (Button)findViewById(R.id.src_btn);
+        srcBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // makeText(MainActivity.this.getApplicationContext(), "hello, image process", Toast.LENGTH_SHORT).show();
+                kaySrc();
+            }
+        });
+ 
+        Button hsvBtn = (Button)findViewById(R.id.hsv_btn);
+        hsvBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // makeText(MainActivity.this.getApplicationContext(), "hello, image process", Toast.LENGTH_SHORT).show();
+                kayHsv();
+            }
+        });
+    }
+ 
+    private void staticLoadCVLibraries(){
+        boolean load = OpenCVLoader.initDebug();
+        if(load) {
+            Log.i("CV", "Open CV Libraries loaded...");
+        }
+    }
+ 
+    private void convertGray() {
+        Mat src = new Mat();
+        Mat temp = new Mat();
+        Mat dst = new Mat();
+ 
+        Utils.bitmapToMat(selectbp, src);
+        Imgproc.cvtColor(src, temp, Imgproc.COLOR_BGRA2BGR);
+        Log.i("CV", "image type:" + (temp.type() == CvType.CV_8UC3));
+        Imgproc.cvtColor(temp, dst, Imgproc.COLOR_BGR2GRAY);
+        Utils.matToBitmap(dst, selectbptmp);
+        myImageView.setImageBitmap(selectbptmp);
+    }
+ 
+    private void kayCanny() {
+        Mat src = new Mat();
+        Mat temp = new Mat();
+        Mat gray = new Mat();
+        Mat dst = new Mat();
+        Utils.bitmapToMat(selectbp, src);
+        Imgproc.cvtColor(src, temp, Imgproc.COLOR_BGRA2BGR);
+        Imgproc.cvtColor(temp, gray, Imgproc.COLOR_BGR2GRAY);
+ 
+        Imgproc.Canny(gray, dst, 80, 90);
+ 
+        Utils.matToBitmap(dst, selectbptmp);
+        myImageView.setImageBitmap(selectbptmp);
+    }
+ 
+    private void kaySrc() {
+ 
+        myImageView.setImageBitmap(selectbp);
+    }
+ 
+    private void kayHsv() {
+        Mat src = new Mat();
+        Mat temp = new Mat();
+        Mat dst = new Mat();
+ 
+        Utils.bitmapToMat(selectbp, src);
+        Imgproc.cvtColor(src, temp, Imgproc.COLOR_BGRA2BGR);
+        Log.i("CV", "image type:" + (temp.type() == CvType.CV_8UC3));
+        Imgproc.cvtColor(temp, dst, Imgproc.COLOR_BGR2HSV);
+        Utils.matToBitmap(dst, selectbptmp);
+        myImageView.setImageBitmap(selectbptmp);
+    }
+ 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+ 
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            try {
+                Log.d("image-tag", "start to decode selected image now...");
+                InputStream input = getContentResolver().openInputStream(uri);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(input, null, options);
+                int raw_width = options.outWidth;
+                int raw_height = options.outHeight;
+                int max = Math.max(raw_width, raw_height);
+                int newWidth = raw_width;
+                int newHeight = raw_height;
+                int inSampleSize = 1;
+                if(max > max_size) {
+                    newWidth = raw_width / 2;
+                    newHeight = raw_height / 2;
+                    while((newWidth/inSampleSize) > max_size || (newHeight/inSampleSize) > max_size) {
+                        inSampleSize *=2;
+                    }
+                }
+ 
+                options.inSampleSize = inSampleSize;
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                selectbp = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, options);
+                selectbptmp = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, options);
+                myImageView.setImageBitmap(selectbptmp);
+ 
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+ 
+    private void selectImage() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent,"选择图像..."), PICK_IMAGE_REQUEST);
+    }
+}
