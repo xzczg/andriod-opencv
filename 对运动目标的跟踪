@@ -1,3 +1,98 @@
+布局
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+        <org.opencv.android.JavaCameraView
+            android:id="@+id/jcv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:paddingStart="0dp"
+            app:paddingEnd="0dp"
+            />
+        <SeekBar
+            android:id="@+id/HseekBarMin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+            />
+        <SeekBar
+            android:id="@+id/HseekBarMax"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+
+            />
+        <SeekBar
+            android:id="@+id/SseekBarMin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+
+            />
+        <SeekBar
+            android:id="@+id/SseekBarMax"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+
+            />
+        <SeekBar
+            android:id="@+id/VseekBarMin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+            />
+        <SeekBar
+            android:id="@+id/VseekBarMax"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+
+            />
+        <SeekBar
+            android:id="@+id/seekBarTracBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="5.0dp"
+            android:minHeight="5.0dp"
+
+
+            />
+        <Button
+            android:id="@+id/chg_cam"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_marginBottom="20dp"
+            android:text="处理"/>
+    </RelativeLayout>
+</LinearLayout>
+
+代码
 import java.util.ArrayList;
 import java.util.List;
 
@@ -329,8 +424,14 @@ public class MyTracker extends Activity implements OnTouchListener,
 	@Override
 	public void onResume() {
 		super.onResume();
-		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this,
-				mLoaderCallback);
+        if(!OpenCVLoader.initDebug()){
+           // Log.d(TAG,"Internal OpenCV library not found. Using OpenCV manger for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0,this,mLoaderCallback);
+        }else{
+           // Log.d(TAG,"OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+
+        }
 	}
 
 	public void onDestroy() {
