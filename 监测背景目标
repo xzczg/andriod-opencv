@@ -225,7 +225,8 @@ public class MainActivity extends Activity implements OnTouchListener,CvCameraVi
                             //Imgproc.drawContours(mRgba, contours, idx, new Scalar(0,255,0), 3);
                           Rect rect= Imgproc.boundingRect( contours.get( idx ) );
                             Imgproc.rectangle( mRgba,new Point( rect.x,rect.y ),new Point( rect.x+rect.width,rect.y+rect.height ), new Scalar(0, 255,0, 255), 2);
-
+                     //椭圆             
+                    //Imgproc.ellipse(mRgba, mRect, mColor);
                         //     i++;
                         }
 
