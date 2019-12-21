@@ -115,7 +115,7 @@ public class MainActivity extends Activity implements OnTouchListener,CvCameraVi
           Mat hierarchy=new Mat(  );
           Mat pp = getStructuringElement(MORPH_RECT, new Size(10,10));
           Imgproc.dilate(ab,ac,pp);
-
+          //分离颜色后遮罩出原图部分 用 Core.bitwise_and(mRgba,mRgba,ab,ac); 最后一个为上面分离颜色报为遮罩，第三个为输出图，第一、二可以有一个为null
            List<MatOfPoint> contours=new ArrayList<>();
                           //轮廓检测 CHAIN_APPROX_SIMPLE
            Imgproc.findContours(ac,contours,hierarchy,Imgproc.RETR_EXTERNAL,Imgproc.CHAIN_APPROX_SIMPLE);
