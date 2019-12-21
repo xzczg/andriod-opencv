@@ -273,9 +273,9 @@ public class MainActivity extends Activity implements OnTouchListener,CvCameraVi
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		setContentView(R.layout.color_blob_detection_surface_view);
+		setContentView(R.layout.activity_main);
 
-		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.jcv);
 		mOpenCvCameraView.setCvCameraViewListener(this);
 		mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
 		// mOpenCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
