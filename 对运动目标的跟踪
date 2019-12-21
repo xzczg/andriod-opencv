@@ -125,8 +125,7 @@ import android.widget.Toast;
  * @author Jack_ZGM
  * 
  */
-public class MyTracker extends Activity implements OnTouchListener,
-		CvCameraViewListener2 {
+public class MainActivity extends Activity implements OnTouchListener,CvCameraViewListener2{
 	// 公共模块
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private Scalar mColor;
