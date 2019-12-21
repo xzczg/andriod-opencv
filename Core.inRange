@@ -1,0 +1,20 @@
+int iLowH = 78;
+        int iHighH = 99;
+ 
+        int iLowS = 43;
+        int iHighS = 255;
+ 
+        int iLowV = 46;
+        int iHighV = 255;
+ 
+ 
+        Mat m = new Mat();
+        Utils.bitmapToMat(bitmap_src, m);
+ 
+        Mat hsv=new Mat();
+        //android上的是RGBA，所以先转成BGR
+        Imgproc.cvtColor(m,hsv,Imgproc.COLOR_RGBA2BGR);
+        Imgproc.cvtColor(hsv,hsv,Imgproc.COLOR_BGR2HSV);
+ 
+        Mat r=new Mat();
+        Core.inRange(hsv, new Scalar(iLowH, iLowS, iLowV), new Scalar(iHighH, iHighS, iHighV),r);
