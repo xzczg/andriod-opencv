@@ -49,7 +49,7 @@ public class OpencvActivity extends AppCompatActivity implements CameraBridgeVie
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_opencv);
 
-        new GetRunAuthorityUtil().getRunAuthority(this, this); //动态获取权限
+       // new GetRunAuthorityUtil().getRunAuthority(this, this); //动态获取权限
 
         handler = new Handler();
 
