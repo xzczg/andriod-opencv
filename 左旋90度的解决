@@ -1,0 +1,111 @@
+修改在MainActivity中的预览函数
+@Override  
+public Mat onCameraFrame(CvCameraViewFrame inputFrame) {  
+    // TODO Auto-generated method stub  
+    Mat dst = new Mat();  
+    Mat gray = inputFrame.gray();  
+    Mat rotateMat = Imgproc.getRotationMatrix2D(new Point(gray.rows()/2,gray.cols()/2), 90, 1);  
+    Imgproc.warpAffine(gray, dst, rotateMat, dst.size());  
+    return dst;  
+}
+
+deliverAndDrawFrame方法
+
+
+protected void deliverAndDrawFrame(CvCameraViewFrame frame) {
+    Mat modified;
+ 
+    if (mListener != null) {
+        modified = mListener.onCameraFrame(frame);
+    } else {
+        modified = frame.rgba();
+    }
+ 
+    boolean bmpValid = true;
+    if (modified != null) {
+        try {
+            Utils.matToBitmap(modified, mCacheBitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Mat type: " + modified);
+            Log.e(TAG, "Bitmap type: " + mCacheBitmap.getWidth() + "*" + mCacheBitmap.getHeight());
+            Log.e(TAG, "Utils.matToBitmap() throws an exception: " + e.getMessage());
+            bmpValid = false;
+        }
+    }
+ 
+    if (bmpValid && mCacheBitmap != null) {
+        Canvas canvas = getHolder().lockCanvas();
+        if (canvas != null) {
+            canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
+            // 修改预览旋转90问题
+            // 能够通过旋转，正常显示预览，但是图像被缩放了
+            //canvas.drawBitmap(mCacheBitmap, (canvas.getWidth() - mCacheBitmap.getWidth()) / 2, (canvas.getHeight() - mCacheBitmap.getHeight()) / 2, null);
+            //Change to support portrait view
+            Matrix matrix = new Matrix();
+            matrix.preTranslate((canvas.getWidth() - mCacheBitmap.getWidth()) / 2, (canvas.getHeight() - mCacheBitmap.getHeight()) / 2);
+ 
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                matrix.postRotate(90f, (canvas.getWidth()) / 2, (canvas.getHeight()) / 2);
+            canvas.drawBitmap(mCacheBitmap, matrix, new Paint());
+            // 修改预览旋转90问题end
+ 
+            if (mFpsMeter != null) {
+                mFpsMeter.measure();
+                mFpsMeter.draw(canvas, 20, 30);
+            }
+            getHolder().unlockCanvasAndPost(canvas);
+        }
+    }
+}
+
+
+protected void deliverAndDrawFrame(CvCameraViewFrame frame) {
+    Mat modified;
+ 
+    if (mListener != null) {
+        modified = mListener.onCameraFrame(frame);
+    } else {
+        modified = frame.rgba();
+    }
+ 
+    boolean bmpValid = true;
+    if (modified != null) {
+        try {
+            Utils.matToBitmap(modified, mCacheBitmap);
+        } catch (Exception e) {
+            Log.e(TAG, "Mat type: " + modified);
+            Log.e(TAG, "Bitmap type: " + mCacheBitmap.getWidth() + "*" + mCacheBitmap.getHeight());
+            Log.e(TAG, "Utils.matToBitmap() throws an exception: " + e.getMessage());
+            bmpValid = false;
+        }
+    }
+ 
+    if (bmpValid && mCacheBitmap != null) {
+        Canvas canvas = getHolder().lockCanvas();
+        if (canvas != null) {
+            canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
+ 
+            // 修改预览旋转90度问题
+            canvas.rotate(90,0,0);
+            float scale = canvas.getWidth() / (float)mCacheBitmap.getHeight();
+            float scale2 = canvas.getHeight() / (float)mCacheBitmap.getWidth();
+            if(scale2 > scale){
+                scale = scale2;
+            }
+            if (scale != 0) {
+                canvas.scale(scale, scale,0,0);
+            }
+            canvas.drawBitmap(mCacheBitmap, 0, -mCacheBitmap.getHeight(), null);
+            // 修改预览旋转90度问题end
+ 
+            if (mFpsMeter != null) {
+                mFpsMeter.measure();
+                mFpsMeter.draw(canvas, 20, 30);
+            }
+            getHolder().unlockCanvasAndPost(canvas);
+        }
+    }
+}
+
+横屏
+<activity android:name=".MainActivity"  android:screenOrientation="landscape">
