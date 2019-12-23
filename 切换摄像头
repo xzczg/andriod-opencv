@@ -1,0 +1,16 @@
+ public void onClick(View v) {
+            if (v.equals(chg_camBtn)) {
+                if (chgCam) {
+                    mOpenCvCameraView.disableView();
+                    mOpenCvCameraView
+                            .setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+                    mOpenCvCameraView.enableView();
+                } else {
+                    mOpenCvCameraView.disableView();
+                    mOpenCvCameraView
+                            .setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+                    mOpenCvCameraView.enableView();
+                }
+                chgCam = !chgCam;
+            }
+        }
