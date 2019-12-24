@@ -1,0 +1,336 @@
+方法一
+经过我的研究，网上有很多解决的方法，主要都是通过修改CameraBridgeViewBase.java这个库文件实现的，该库文件在你的工程\openCVLibrary340\java\org.openv\android文件夹下
+
+我尝试了其中的一种方法，在CameraBridgeViewBase.java中找到protected void deliverAndDrawFrame(CvCameraViewFrame frame) 这个方法
+将其中的代码修改如下：
+ canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
+
+                /*                
+                //原来的方法
+                if (BuildConfig.DEBUG)
+                    Log.d(TAG, "mStretch value: " + mScale);
+
+                if (mScale != 0) {
+                    canvas.drawBitmap(mCacheBitmap, new Rect(0,0,mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
+                         new Rect((int)((canvas.getWidth() - mScale*mCacheBitmap.getWidth()) / 2),
+                         (int)((canvas.getHeight() - mScale*mCacheBitmap.getHeight()) / 2),
+                         (int)((canvas.getWidth() - mScale*mCacheBitmap.getWidth()) / 2 + mScale*mCacheBitmap.getWidth()),
+                         (int)((canvas.getHeight() - mScale*mCacheBitmap.getHeight()) / 2 + mScale*mCacheBitmap.getHeight())), null);
+                } else {
+                     canvas.drawBitmap(mCacheBitmap, new Rect(0,0,mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
+                         new Rect((canvas.getWidth() - mCacheBitmap.getWidth()) / 2,
+                         (canvas.getHeight() - mCacheBitmap.getHeight()) / 2,
+                         (canvas.getWidth() - mCacheBitmap.getWidth()) / 2 + mCacheBitmap.getWidth(),
+                         (canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
+                }
+                */
+
+
+
+                //修改预览旋转90度问题
+                canvas.rotate(90, 0, 0);
+                float scalew = canvas.getWidth() / (float)mCacheBitmap.getHeight();
+                float scaleh = canvas.getHeight() / (float)mCacheBitmap.getHeight();
+                if (scaleh > scalew) {
+                    scalew = scaleh;
+                }
+                if (scalew !=0 ) {
+                    canvas.scale(scalew, scalew, 0, 0);
+                }
+                canvas.drawBitmap(mCacheBitmap, 0, -mCacheBitmap.getHeight(), null);
+                //修改预览旋转90度问题end
+     
+
+                if (mFpsMeter != null) {
+   
+   方法二
+直接调用opencv的库函数方法，先定义三个全局变量，并且修改onCameraViewStarted（）函数和onCameraFrame（）函数
+
+public void onCameraViewStarted(int width, int height) {
+
+        mRgba = new Mat(height, width, CvType.CV_8UC4);
+        mRgbaF = new Mat(height, width, CvType.CV_8UC4);
+        mRgbaT = new Mat(width, width, CvType.CV_8UC4);
+    }
+
+@Override
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+
+        /**
+         * // TODO Auto-generated method stub
+         mRgba = inputFrame.rgba();
+         // Rotate mRgba 90 degrees
+         Core.transpose(mRgba, mRgbaT);
+         Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0, 0, 0);
+         Core.flip(mRgbaF, mRgba, 1);
+         */
+        mRgba = inputFrame.rgba();
+
+        switch (mOpenCvCameraView.getDisplay().getRotation()) {
+            case Surface.ROTATION_0: // Vertical portrait
+                Core.transpose(mRgba, mRgbaT);
+                Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
+                Core.flip(mRgbaF, mRgba, 1);
+                break;
+            case Surface.ROTATION_90: // 90° anti-clockwise
+                break;
+            case Surface.ROTATION_180: // Vertical anti-portrait
+                Core.transpose(mRgba, mRgbaT);
+                Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
+                Core.flip(mRgbaF, mRgba, 0);
+                break;
+            case Surface.ROTATION_270: // 90° clockwise
+                Imgproc.resize(mRgba, mRgbaF, mRgbaF.size(), 0,0, 0);
+                Core.flip(mRgbaF, mRgba, -1);
+                break;
+            default:
+        }
+        return mRgba;
+    }
+    
+    这样就能实现竖屏显示了，并且横竖屏能随意切换，但是在我的测试里竖屏时存在图像被压缩不能全屏的问题，比例为横屏的比例，理论上如果在 case Surface.ROTATION_0: // Vertical portrait下做替换如下：
+Imgproc.resize(mRgbaT, mRgbaF, mRgbaF.size(), 0,0, 0);
+Imgproc.resize(mRgbaT, mRgbaF, mRgbaT.size(), 0,0, 0);
+Imgproc.resize(mRgba, mRgba, mRgbaT.size(),0,0,0);
+Core.flip(mRgbaF, mRgba, 1);
+
+方法三
+我通过查阅opencv android sdk 给出的sample 发现了一个解决这个问题的新思路。核心思想就是锁定app的方向旋转，将其固定为Landscape，即水平模式
+通过修改AndroidMainifest.xml来实现，无需修改CameraBridgeViewBase.java这个库文件
+
+重点
+给AndroidMainifest.xml里的<application标签添加如下代码android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+给<activity标签添加android:screenOrientation="landscape"
+即把AndroidMainifest.xml修改为
+
+注意，因为在要AndroidMainifest.xml里要使用android:theme="@android:style/Theme.NoTitleBar.Fullscreen"这个主题，需要我们继承Activity这个类而不是之前一直默认使用的AppCompatActivity，即.java文件开始应该为
+
+public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener{
+
+MainActivity.java代码和activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/relative"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.example.aaa.facedetection1_0.MainActivity">
+    <org.opencv.android.JavaCameraView
+        android:id="@+id/openCvCameraView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone"
+        app:camera_id="any"
+        app:show_fps="true"
+        />
+
+</RelativeLayout>
+
+
+package com.example.aaa.facedetection1_0;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.graphics.Camera;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import static com.example.aaa.facedetection1_0.R.id.openCvCameraView;
+
+public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener{
+
+    private CameraBridgeViewBase openCvCameraView;
+    private CascadeClassifier cascadeClassifier;
+    private Mat grayscaleImage;
+    private int absoluteFaceSize;
+
+    public static int CAMERA_FRONT = 0;
+    public static int CAMERA_BACK = 1;
+    private  int camera_scene = CAMERA_BACK;
+
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status){
+            switch (status){
+                case LoaderCallbackInterface.SUCCESS:
+                    initializeOpenCVDependencies();
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+
+    private void initializeOpenCVDependencies(){
+        try{
+            InputStream is = getResources().openRawResource(R.raw.lbpcascade_frontalface);
+            File casadeDir = getDir("cascade", Context.MODE_PRIVATE);
+            File mCascadeFile = new File(casadeDir,"lbpcascade_frontalface.xml");
+            FileOutputStream os = new FileOutputStream(mCascadeFile);
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1){
+                os.write(buffer, 0, bytesRead);
+            }
+            is.close();
+            os.close();
+
+            cascadeClassifier = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+
+        } catch (Exception e) {
+            Log.e("OpenCVActivity","Error Loading casade",e);
+        }
+
+        openCvCameraView.enableView();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(R.layout.activity_main);
+
+        final RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.relative);
+
+        openCvCameraView = new JavaCameraView(this, CameraBridgeViewBase.CAMERA_ID_BACK)      
+        openCvCameraView.setCvCameraViewListener(this);
+        
+
+        final Button button = new Button(MainActivity.this);
+
+        button.setText("切换摄像头");
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                if (camera_scene == CAMERA_FRONT) {
+                    relativeLayout.removeAllViews();
+                    openCvCameraView.disableView();
+                    openCvCameraView = null;
+                    cascadeClassifier = null;
+//测试发现只留下openCvCameraView.disableView(); initializeOpenCVDependencies();（或openCvCameraView.enableView();）也可以
+                    openCvCameraView = new JavaCameraView(MainActivity.this, CameraBridgeViewBase.CAMERA_ID_BACK);
+                    openCvCameraView.setCvCameraViewListener(MainActivity.this);
+                    openCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+
+                    camera_scene = CAMERA_BACK;
+
+                    relativeLayout.addView(openCvCameraView);
+                    relativeLayout.addView(button);
+
+                    initializeOpenCVDependencies();
+                } else {
+                    relativeLayout.removeAllViews();
+                    openCvCameraView.disableView();
+                    openCvCameraView = null;
+                    cascadeClassifier = null;
+
+                    openCvCameraView = new JavaCameraView(MainActivity.this, CameraBridgeViewBase.CAMERA_ID_FRONT);
+                    openCvCameraView.setCvCameraViewListener(MainActivity.this);
+                    openCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+
+                    camera_scene = CAMERA_FRONT;
+
+                    relativeLayout.addView(openCvCameraView);
+                    relativeLayout.addView(button);
+
+                    initializeOpenCVDependencies();
+                }
+            }
+        });
+
+        relativeLayout.addView(openCvCameraView);
+        relativeLayout.addView(button);
+
+        if (camera_scene == CAMERA_FRONT) {
+            openCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+
+        } else if (camera_scene == CAMERA_BACK) {
+            openCvCameraView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+
+        }
+
+
+    }
+
+    @Override
+    public void onCameraViewStarted(int width, int height){
+        grayscaleImage = new Mat(height, width, CvType.CV_8UC4);
+
+        absoluteFaceSize = (int)(height * 0.2);
+
+    }
+
+    @Override
+    public void onCameraViewStopped(){
+
+    }
+
+    @Override
+    public Mat onCameraFrame(Mat aInputFrame){
+
+        Imgproc.cvtColor(aInputFrame, grayscaleImage, Imgproc.COLOR_RGBA2RGB);
+
+      
+        //使前置的图像也是正的
+        if (camera_scene == CAMERA_FRONT) {
+            Core.flip(aInputFrame, aInputFrame, 1);
+            Core.flip(grayscaleImage, grayscaleImage, 1);
+        }
+
+
+        MatOfRect faces = new MatOfRect();
+
+        if (cascadeClassifier != null){
+            cascadeClassifier.detectMultiScale(grayscaleImage,faces,1.1,2,2,new Size(absoluteFaceSize,absoluteFaceSize),new Size());
+        }
+
+        Rect[] faceArray = faces.toArray();
+        for (int i = 0; i < faceArray.length; i++)
+
+            Imgproc.rectangle(aInputFrame, faceArray[i].tl(), faceArray[i].br(), new Scalar(0, 255, 0, 255), 1);
+
+        return aInputFrame;
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        if (!OpenCVLoader.initDebug()){
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
+
+        } else {
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+    }
+}
+
+   
