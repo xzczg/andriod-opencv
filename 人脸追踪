@@ -139,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         for (int i = 0; i < facesArray.length; i++) {
             Imgproc.rectangle(aInputFrame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255,0, 255), 3);
+            //Imgproc.putText(aInputFrame,"car1", new Point(facesArray[i].tl().x,facesArray[i].tl().y-2), Core.FONT_HERSHEY_SIMPLEX,1.2,new Scalar(0, 255,0, 255), 2);
         }
         return aInputFrame;
     }
